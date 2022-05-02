@@ -12,6 +12,8 @@ public class ModelMapperConfig {
 
 		var modelMapper = new ModelMapper();
 
+		CategoriaModelMapper.modelCategoriaDepartamentoCompact(modelMapper);
+
 		return modelMapper;
 	}
 
