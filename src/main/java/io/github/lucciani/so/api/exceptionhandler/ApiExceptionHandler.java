@@ -239,9 +239,19 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 			HttpStatus status, WebRequest request) {
 
 		if (body == null) {
-			body = Problem.builder().title(status.getReasonPhrase()).status(status.value()).build();
+			body = Problem.builder()
+				.timestamp(OffsetDateTime.now())
+				.title(status.getReasonPhrase())
+				.status(status.value())
+				.userMessage(MSG_ERRO_GENERICA_USUARIO_FINAL)
+				.build();
 		} else if (body instanceof String) {
-			body = Problem.builder().title((String) body).status(status.value()).build();
+			body = Problem.builder()
+				.timestamp(OffsetDateTime.now())
+				.title((String) body)
+				.status(status.value())
+				.userMessage(MSG_ERRO_GENERICA_USUARIO_FINAL)
+				.build();
 		}
 
 		return super.handleExceptionInternal(e, body, headers, status, request);
