@@ -1,6 +1,7 @@
 package io.github.lucciani.so.api.exceptionhandler;
 
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,6 +17,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
@@ -111,6 +113,26 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
 		Problem problem = createProblemBuilder(status, problemType, detail).userMessage(detail).objects(problemFields)
 				.build();
+
+		return handleExceptionInternal(ex, problem, new HttpHeaders(), status, request);
+	}
+
+	@Override
+	protected ResponseEntity<Object> handleMissingServletRequestParameter(MissingServletRequestParameterException ex,
+			HttpHeaders headers, HttpStatus status, WebRequest request) {
+
+		ProblemType problemType = ProblemType.DADOS_INVALIDOS;
+		String detail = "Um ou mais campos estão inválidos. Faça o preenchimento correto e tente novamente.";
+
+		String parameterName = ex.getParameterName();
+		String parameterType = ex.getParameterType();
+
+		String userMsg = String.format("O parametro %s do tipo %s é obrigatório.", parameterName, parameterType);
+
+		Problem.Object objBuild = Problem.Object.builder().name(parameterName).userMessage(userMsg).build();
+
+		Problem problem = createProblemBuilder(status, problemType, detail).userMessage(detail)
+				.objects(Arrays.asList(objBuild)).build();
 
 		return handleExceptionInternal(ex, problem, new HttpHeaders(), status, request);
 	}
