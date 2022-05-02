@@ -4,6 +4,7 @@ delete from departamento;
 delete from categoria;
 delete from prioridade;
 delete from status;
+delete from permissao;
 
 set foreign_key_checks = 1;
 
@@ -11,6 +12,7 @@ alter table departamento auto_increment = 1;
 alter table categoria auto_increment = 1;
 alter table prioridade auto_increment = 1;
 alter table status auto_increment = 1;
+alter table permissao auto_increment = 1;
 
 INSERT INTO departamento (id, descricao, ativo) VALUES (1, 'Suporte', 1);
 INSERT INTO departamento (id, descricao, ativo) VALUES (2, 'Infraestrutura',1);
@@ -30,3 +32,6 @@ INSERT INTO status (id, descricao) VALUES (4, 'Resolvido');
 INSERT INTO status (id, descricao) VALUES (5, 'Aprovado');
 INSERT INTO status (id, descricao) VALUES (6, 'Cancelado');
 INSERT INTO status (id, descricao) VALUES (7, 'Fechado');
+
+INSERT INTO permissao (id, nome, descricao) VALUES (1, 'CONSULTAR_STATUS', 'Permite consultar status');
+INSERT INTO permissao (id, nome, descricao) VALUES (2, 'EDITAR_STATUS', 'Permite editar status');
