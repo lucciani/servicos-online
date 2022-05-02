@@ -27,6 +27,7 @@ public class CadastroStatusService {
 	public void remover(Long statusId) {
 		try {
 			statusRepository.deleteById(statusId);
+			statusRepository.flush();
 		} catch (EmptyResultDataAccessException e) {
 			throw new StatusNaoEncontradaException(statusId);
 		} catch (DataIntegrityViolationException e) {

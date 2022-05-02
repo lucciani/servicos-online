@@ -27,6 +27,7 @@ public class CadastroPrioridadeService {
 	public void remover(Long prioridadeId) {
 		try {
 			prioridadeRepository.deleteById(prioridadeId);
+			prioridadeRepository.flush();
 		} catch (EmptyResultDataAccessException e) {
 			throw new PrioridadeNaoEncontradaException(prioridadeId);
 		} catch (DataIntegrityViolationException e) {
