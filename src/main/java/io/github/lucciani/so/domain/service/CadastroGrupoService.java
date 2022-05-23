@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import io.github.lucciani.so.domain.exception.EntidadeEmUsoException;
 import io.github.lucciani.so.domain.exception.GrupoNaoEncontradoException;
 import io.github.lucciani.so.domain.model.Grupo;
+import io.github.lucciani.so.domain.model.Permissao;
 import io.github.lucciani.so.domain.repository.GrupoRepository;
 
 @Service
@@ -19,6 +20,9 @@ public class CadastroGrupoService {
 
 	@Autowired
 	private GrupoRepository grupoRepository;
+
+	@Autowired
+	private CadastroPermissaoService cadastroPermissao;
 
 	@Transactional
 	public Grupo salvar(Grupo grupo) {
@@ -37,6 +41,22 @@ public class CadastroGrupoService {
 		} catch (DataIntegrityViolationException e) {
 			throw new EntidadeEmUsoException(String.format(MSG_GRUPO_EM_USO, grupoId));
 		}
+	}
+
+	@Transactional
+	public void desassociarPermissao(Long grupoId, Long permissaoId) {
+		Grupo grupo = buscarSeExistir(grupoId);
+		Permissao permissao = cadastroPermissao.buscarSeExistir(permissaoId);
+
+		grupo.removerPermissao(permissao);
+	}
+
+	@Transactional
+	public void associarPermissao(Long grupoId, Long permissaoId) {
+		Grupo grupo = buscarSeExistir(grupoId);
+		Permissao permissao = cadastroPermissao.buscarSeExistir(permissaoId);
+
+		grupo.adicionarPermissao(permissao);
 	}
 
 	public Grupo buscarSeExistir(Long grupoId) {
