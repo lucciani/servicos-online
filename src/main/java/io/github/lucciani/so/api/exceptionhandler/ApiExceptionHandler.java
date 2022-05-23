@@ -14,8 +14,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -42,6 +46,12 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 	private static final String MSG_ERRO_GENERICA_USUARIO_FINAL = "Ocorreu um erro interno inesperado no sistema. "
 			+ "Tente novamente e se o problema persistir, entre em contato " + "com o administrador do sistema.";
 
+	@Override
+	protected ResponseEntity<Object> handleHttpMediaTypeNotAcceptable(HttpMediaTypeNotAcceptableException ex,
+			HttpHeaders headers, HttpStatus status, WebRequest request) {
+		return ResponseEntity.status(status).headers(headers).build();
+	}
+
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<Object> handleUncaught(Exception ex, WebRequest request) {
 		ProblemType problemType = ProblemType.ERRO_DE_SISTEMA;
@@ -52,6 +62,46 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 		ex.printStackTrace();
 
 		Problem problem = createProblemBuilder(status, problemType, detail).userMessage(detail).build();
+
+		return handleExceptionInternal(ex, problem, new HttpHeaders(), status, request);
+	}
+
+	@ExceptionHandler(AccessDeniedException.class)
+	public ResponseEntity<?> handleAccessDeninedException(AccessDeniedException ex, WebRequest request) {
+
+		HttpStatus status = HttpStatus.FORBIDDEN;
+		ProblemType problemType = ProblemType.ACESSO_NEGADO;
+		String detail = ex.getMessage();
+
+		Problem problem = createProblemBuilder(status, problemType, detail).userMessage(detail)
+				.userMessage("Você não possui permissão para executar essa operação.").build();
+
+		return handleExceptionInternal(ex, problem, new HttpHeaders(), status, request);
+	}
+
+	@ExceptionHandler(BadCredentialsException.class)
+	public ResponseEntity<?> handleBadCredentialsException(BadCredentialsException ex, WebRequest request) {
+
+		HttpStatus status = HttpStatus.FORBIDDEN;
+		ProblemType problemType = ProblemType.DADOS_INVALIDOS;
+		String detail = ex.getMessage();
+
+		Problem problem = createProblemBuilder(status, problemType, detail).userMessage(detail)
+				.userMessage("Você não possui permissão para executar essa operação.").build();
+
+		return handleExceptionInternal(ex, problem, new HttpHeaders(), status, request);
+	}
+
+	@ExceptionHandler(InternalAuthenticationServiceException.class)
+	public ResponseEntity<?> handleInternalAuthenticationServiceException(InternalAuthenticationServiceException ex,
+			WebRequest request) {
+
+		HttpStatus status = HttpStatus.FORBIDDEN;
+		ProblemType problemType = ProblemType.DADOS_INVALIDOS;
+		String detail = ex.getMessage();
+
+		Problem problem = createProblemBuilder(status, problemType, detail).userMessage(detail)
+				.userMessage("Você não possui permissão para executar essa operação.").build();
 
 		return handleExceptionInternal(ex, problem, new HttpHeaders(), status, request);
 	}
@@ -193,7 +243,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 			return handlePropertyBinding((PropertyBindingException) rootCause, headers, status, request);
 		}
 
-		ProblemType problemType = ProblemType.MENSAGEM_INCROMPREENSIVEL;
+		ProblemType problemType = ProblemType.MENSAGEM_INCOMPREENSIVEL;
 		String detail = "O corpo da requisição está inválido. Verifique erro de sintaxe.";
 
 		Problem problem = createProblemBuilder(status, problemType, detail).userMessage(MSG_ERRO_GENERICA_USUARIO_FINAL)
@@ -207,7 +257,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
 		String path = joinPath(ex.getPath());
 
-		ProblemType problemType = ProblemType.MENSAGEM_INCROMPREENSIVEL;
+		ProblemType problemType = ProblemType.MENSAGEM_INCOMPREENSIVEL;
 		String detail = String.format(
 				"A propriedade '%s' não existe. " + "Corrija ou remova essa propriedade e tente novamente.", path);
 
@@ -222,7 +272,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
 		String path = joinPath(ex.getPath());
 
-		ProblemType problemType = ProblemType.MENSAGEM_INCROMPREENSIVEL;
+		ProblemType problemType = ProblemType.MENSAGEM_INCOMPREENSIVEL;
 		String detail = String.format(
 				"A propriedade '%s' recebeu o valor '%s',"
 						+ " que é de um tipo inválido. Corrija e informe um valor compatível com o tipo %s.",
@@ -239,19 +289,11 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 			HttpStatus status, WebRequest request) {
 
 		if (body == null) {
-			body = Problem.builder()
-				.timestamp(OffsetDateTime.now())
-				.title(status.getReasonPhrase())
-				.status(status.value())
-				.userMessage(MSG_ERRO_GENERICA_USUARIO_FINAL)
-				.build();
+			body = Problem.builder().timestamp(OffsetDateTime.now()).title(status.getReasonPhrase())
+					.status(status.value()).userMessage(MSG_ERRO_GENERICA_USUARIO_FINAL).build();
 		} else if (body instanceof String) {
-			body = Problem.builder()
-				.timestamp(OffsetDateTime.now())
-				.title((String) body)
-				.status(status.value())
-				.userMessage(MSG_ERRO_GENERICA_USUARIO_FINAL)
-				.build();
+			body = Problem.builder().timestamp(OffsetDateTime.now()).title((String) body).status(status.value())
+					.userMessage(MSG_ERRO_GENERICA_USUARIO_FINAL).build();
 		}
 
 		return super.handleExceptionInternal(e, body, headers, status, request);
